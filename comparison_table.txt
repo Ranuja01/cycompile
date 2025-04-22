@@ -1,0 +1,37 @@
+Absolutely! Here's a clean, copy-friendly Markdown table comparing **Regular Python**, **`@cycompile`**, and **`@cython.compile`**:
+
+---
+
+### 🧪 Comparison Table: Python vs `@cycompile` vs `@cython.compile`
+
+| Feature                                   | Regular Python     | `@cycompile`                        | `@cython.compile`                    |
+|-------------------------------------------|---------------------|--------------------------------------|--------------------------------------|
+| **Speed Boost**                           | ❌                  | ✅ (loops, recursion-heavy code)     | ✅ (especially with NumPy & typed code) |
+| **Supports Recursion**                    | ✅                  | ✅                                   | ❌ (not fully supported)             |
+| **Inline Compilation**                    | ❌ (requires `.pyx`) | ✅                                   | ✅                                   |
+| **Automatic Import Handling**             | ✅                  | ✅                                   | ✅                                   |
+| **Custom Optimization Profiles**          | ❌                  | ✅ (`safe`, `fast`, `custom`)        | ❌ (uses defaults or annotations)     |
+| **Compiler Flags (manual control)**       | ❌                  | ✅                                   | ❌                                   |
+| **Static Type Support**                   | ✅ (annotations only) | ✅ (no inference, but compatible)   | ✅ (with inference!)                 |
+| **Type Inference**                        | ❌                  | ❌                                   | ✅                                   |
+| **Caching Compiled Functions**            | ❌                  | ✅ (with custom hash system)         | ✅ (handled by Cython internally)     |
+| **Manual Decorator Removal Needed**       | ❌                  | ✅ (auto-removes during compile)     | ✅                                   |
+| **Requires Learning Cython Syntax**       | ❌                  | ❌                                   | ❌                                   |
+| **Better for NumPy-heavy Code**           | ✅                  | ❌                                   | ✅                                   |
+| **Better for Loop-heavy Code**            | ❌                  | ✅                                   | ✅                                   |
+| **Cross-platform Optimization Support**   | ❌                  | ⚠️ (partial - Linux optimized)       | ✅                                   |
+| **Supports Dynamic Function Use Cases**   | ✅                  | ✅                                   | ❌ (limited)                          |
+| **Memoryview / Typed Buffer Support**     | ❌                  | ❌ (not yet)                          | ✅                                   |
+| **Ease of Use**                           | ✅                  | ✅✅ (plug-and-play)                 | ✅                                   |
+
+---
+
+You can paste this into:
+
+- A README.md
+- GitHub issues
+- Blog posts
+- Docs
+- Notebooks
+
+Let me know if you want a more visual/HTML-style version too.

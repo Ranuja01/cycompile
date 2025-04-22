@@ -17,6 +17,10 @@ from functools import wraps
 from Cython.Build import cythonize
 from setuptools import Extension, setup
 from cython import compile
+from collections import OrderedDict
+
+compiled_func_cache = OrderedDict()
+MAX_CACHE_SIZE = 500
 
 CACHE_DIR = Path.cwd() / '.cycache'
 
@@ -155,25 +159,27 @@ def run_cython_compile(pyx_path, output_dir, verbose, opt="safe",
     os.makedirs(output_dir, exist_ok=True)
     base_name = pyx_path.stem
 
-    # Built-in profiles
     opt_profiles = {
-        "safe": {
-            "directives": {
-                'language_level': 3,
-            },
-            "flags": [],
+    "safe": {
+        "directives": {
+            'language_level': 3,
         },
-        "fast": {
-            "directives": {
-                'language_level': 3,
-                'boundscheck': False,
-                'wraparound': False,
-                'cdivision': True,
-                'nonecheck': False,
-            },
-            "flags": ["-Ofast", "-march=native", "-flto", "-funroll-loops", "-ffast-math"],
-        }
+        "flags": [],
+    },
+    "fast": {
+        "directives": {
+            'language_level': 3,
+            'boundscheck': False,
+            'wraparound': False,
+            'cdivision': True,
+            'nonecheck': False,
+        },
+        "flags": (
+            ["/O2"] if IS_WINDOWS else  # MSVC: Optimize for speed
+            ["-Ofast", "-march=native", "-flto", "-funroll-loops", "-ffast-math"]
+        ),
     }
+}
 
     # Resolve directives and flags
     if opt == "custom":
@@ -217,8 +223,12 @@ def cycompile(opt="safe", extra_compile_args=None, compiler_directives=None, ver
             compiled_matches = list(CACHE_DIR.glob(f"{hash_key}*.{extension}"))
             
             if compiled_matches:
-                if verbose:
-                    print(f"Using cached compiled version for {func.__name__}.")
+                
+                if hash_key in compiled_func_cache:
+                    if verbose:
+                        print(f"Using cached compiled version for {func.__name__}.")
+                    compiled_func = compiled_func_cache[hash_key]
+                    return compiled_func(*args, **kwargs)    
             else:
                 
                 # Add the imports and source code to the .pyx file content
@@ -255,7 +265,13 @@ def cycompile(opt="safe", extra_compile_args=None, compiler_directives=None, ver
                 # module_name = compiled_file.stem
                 # Dynamically import the compiled .so file using the hash_key
                 module = __import__(hash_key)
-                compiled_func = getattr(module, func.__name__)
+                compiled_func = getattr(module, func.__name__)               
+                
+                # Later when inserting:
+                if len(compiled_func_cache) >= MAX_CACHE_SIZE:
+                    compiled_func_cache.popitem(last=False)  # Remove the oldest
+                compiled_func_cache[hash_key] = compiled_func
+                                
                 return compiled_func(*args, **kwargs)
             finally:
                 # Clean up by removing the cache directory from sys.path

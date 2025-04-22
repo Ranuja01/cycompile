@@ -3,19 +3,41 @@ import time
 import numpy as np
 
 # Function without cycompile (pure Python)
-@cycompile()
+@cycompile(opt = "fast",)
 def square(n: int) -> float:
-    return n ** 2
+    return n ** 3
 
-@cycompile()
+@cycompile(opt = "fast", verbose = True)
 def sum_of_squares_safe(n: int) -> float:
     result = 0.0
     for i in range(1, n+1):
-        result += i ** 2
+        result += square(i)
+    return np.array(result)
+
+import cython
+
+
+def square2(n):
+    return n ** 3
+
+@cython.compile
+def sum_of_squares(n):
+    result = 0.0
+    for i in range(1, n+1):
+        result += square2 (i)
     return np.array(result)
 
 start_time = time.time()
-result_python = sum_of_squares_safe(10**7)  # Calculate for 100 million
+result_python = sum_of_squares_safe(10**4)  # Calculate for 100 million
 end_time = time.time()
 python_time = end_time - start_time
 print(f"Python function took {python_time:.6f} seconds.")
+print(result_python)
+print()
+
+start_time = time.time()
+result_python = sum_of_squares(10**4)  # Calculate for 100 million
+end_time = time.time()
+python_time = end_time - start_time
+print(f"Python function took {python_time:.6f} seconds.")
+print(result_python)
