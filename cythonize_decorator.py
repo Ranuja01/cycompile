@@ -11,6 +11,7 @@ import tempfile
 import contextlib
 import io
 import pathlib
+import ast
 from pathlib import Path
 from functools import wraps
 from Cython.Build import cythonize
@@ -25,22 +26,61 @@ if not CACHE_DIR.exists():
 # Windows has a separate (.pyd) extension
 IS_WINDOWS = platform.system() == "Windows"
 
+def get_called_functions(func_source, available_functions):
+    """
+    Extracts function names that are called inside the function's source code.
+    Uses the Abstract Syntax Tree (AST) to safely parse the code and detect
+    actual function calls, ignoring other uses of function names.
+    """
+    # Parse the source code into an AST
+    tree = ast.parse(func_source)
+    
+    called = set()
+
+    # Traverse the AST
+    for node in ast.walk(tree):
+        # Check if the node is a function call
+        if isinstance(node, ast.Call):
+            # Get the name of the function being called (node.func can be a name or an attribute)
+            if isinstance(node.func, ast.Name):  # direct function call, e.g., func()
+                called.add(node.func.id)
+            elif isinstance(node.func, ast.Attribute):  # attribute-based call, e.g., obj.func()
+                if isinstance(node.func.value, ast.Name):  # only consider the function if it's part of a class or object
+                    called.add(node.func.attr)
+    
+    # Filter out any functions not in the available functions list
+    called = [name for name in called if name in available_functions]
+    
+    return called
+
 def extract_all_imports(func, exclude=("cythonize_decorator", "cycompile")):
+    """
+    Extracts all import statements and the functions being used within the provided function.
+    It also adds the necessary imports for functions defined in the same module that are being called.
+    """
 
     # Step 1: Get the current module where the function is defined
     current_module = inspect.getmodule(func)
     function_names = get_function_names(current_module)
 
-    # Remove the function being compiled
+    # Remove the function being compiled from the list of available functions
     if func.__name__ in function_names:
         function_names.remove(func.__name__)
 
-    # Import statements for other functions in the same module
+    # Get the source code of the function to check which functions it calls
+    func_source = inspect.getsource(func)
+
+    # Step 2: Extract the names of functions being called inside the function
+    called_functions = get_called_functions(func_source, function_names)
+    # Step 3: Filter out the excluded function names from the called functions list
+    called_functions = [name for name in called_functions if name not in exclude]
+    
+    # Import statements for other functions in the same module that are called within the function
     user_func_imports = "\n".join(
-        [f"from {current_module.__name__} import {name}" for name in function_names]
+        [f"from {current_module.__name__} import {name}" for name in called_functions]
     )
 
-    # Step 2: Extract top-level imports from the source file (ignoring excluded ones)
+    # Step 3: Extract top-level imports from the source file (ignoring excluded ones)
     source_file = inspect.getfile(func)
     script_imports = []
 
@@ -53,8 +93,9 @@ def extract_all_imports(func, exclude=("cythonize_decorator", "cycompile")):
 
     script_imports = "\n".join(script_imports)
 
-    # Combine both
+    # Combine the imports from the file and the imports for functions called within the function
     return f"{script_imports}\n{user_func_imports}"
+
 
 def generate_cython_source(func):
 
@@ -161,14 +202,11 @@ def cycompile(opt="safe", extra_compile_args=None, compiler_directives=None, ver
         @wraps(func)
         def wrapper(*args, **kwargs):
             
-            # Add the imports and source code to the .pyx file content
-            source_code = generate_cython_source(func)
-            
             params = (str(compiler_directives) if compiler_directives is not None else "") + \
                      (str(extra_compile_args) if extra_compile_args is not None else "") + \
                      str(opt)
             
-            hash_key = "mod_" + hashlib.md5((params + source_code).encode()).hexdigest()
+            hash_key = "mod_" + hashlib.md5((params + inspect.getsource(func)).encode()).hexdigest()
             
             if IS_WINDOWS:
                 extension = "pyd"
@@ -182,6 +220,9 @@ def cycompile(opt="safe", extra_compile_args=None, compiler_directives=None, ver
                 if verbose:
                     print(f"Using cached compiled version for {func.__name__}.")
             else:
+                
+                # Add the imports and source code to the .pyx file content
+                source_code = generate_cython_source(func)
                 if verbose:
                     print(f"Compiling {func.__name__} with options: {opt}")
                     print(f"Extra compile args: {extra_compile_args}")

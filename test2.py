@@ -3,14 +3,15 @@ import time
 import numpy as np
 
 # Function without cycompile (pure Python)
+@cycompile()
 def square(n: int) -> float:
     return n ** 2
 
-@cycompile(verbose = True)
+@cycompile()
 def sum_of_squares_safe(n: int) -> float:
     result = 0.0
     for i in range(1, n+1):
-        result += square (i)
+        result += i ** 2
     return np.array(result)
 
 start_time = time.time()
