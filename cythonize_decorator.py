@@ -10,6 +10,7 @@ import shutil
 import tempfile
 import contextlib
 import io
+import pathlib
 from pathlib import Path
 from functools import wraps
 from Cython.Build import cythonize
@@ -23,6 +24,50 @@ if not CACHE_DIR.exists():
 
 # Windows has a separate (.pyd) extension
 IS_WINDOWS = platform.system() == "Windows"
+
+def extract_all_imports(func, exclude=("cythonize_decorator", "cycompile")):
+
+    # Step 1: Get the current module where the function is defined
+    current_module = inspect.getmodule(func)
+    function_names = get_function_names(current_module)
+
+    # Remove the function being compiled
+    if func.__name__ in function_names:
+        function_names.remove(func.__name__)
+
+    # Import statements for other functions in the same module
+    user_func_imports = "\n".join(
+        [f"from {current_module.__name__} import {name}" for name in function_names]
+    )
+
+    # Step 2: Extract top-level imports from the source file (ignoring excluded ones)
+    source_file = inspect.getfile(func)
+    script_imports = []
+
+    with open(source_file, "r", encoding="utf-8") as f:
+        for line in f:
+            stripped = line.strip()
+            if stripped.startswith(("import", "from")):
+                if not any(excluded in stripped for excluded in exclude):
+                    script_imports.append(line.rstrip())
+
+    script_imports = "\n".join(script_imports)
+
+    # Combine both
+    return f"{script_imports}\n{user_func_imports}"
+
+def generate_cython_source(func):
+
+    # Extract imports from the original Python file
+    imports = extract_all_imports(func)
+
+    # Get the function's source code without decorators
+    source_code = remove_decorators(func)
+
+    # Add imports to the Cython file source code
+    cython_source_code = f"{imports}\n\n{source_code}"
+
+    return cython_source_code
 
 def remove_decorators(func):
     """
@@ -56,6 +101,12 @@ def remove_decorators(func):
             stripped_lines.append(line)
 
     return "\n".join(stripped_lines)
+
+def get_function_names(module):
+    """
+    Get a list of function names defined in the same module.
+    """
+    return [name for name, obj in inspect.getmembers(module, inspect.isfunction)]
 
 def run_cython_compile(pyx_path, output_dir, verbose, opt="safe",
                        extra_compile_args=None, compiler_directives=None):
@@ -102,15 +153,16 @@ def run_cython_compile(pyx_path, output_dir, verbose, opt="safe",
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             setup(
                 script_args=["build_ext", "--build-lib", output_dir, "--build-temp", temp_build_dir],
-                ext_modules=cythonize([ext], compiler_directives=directives, quiet=verbose),
+                ext_modules=cythonize([ext], compiler_directives=directives, quiet= not verbose),
             )
 
 def cycompile(opt="safe", extra_compile_args=None, compiler_directives=None, verbose = False):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # Get the function source code without decorators
-            source_code = remove_decorators(func)
+            
+            # Add the imports and source code to the .pyx file content
+            source_code = generate_cython_source(func)
             
             params = (str(compiler_directives) if compiler_directives is not None else "") + \
                      (str(extra_compile_args) if extra_compile_args is not None else "") + \
