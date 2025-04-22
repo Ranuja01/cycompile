@@ -4,11 +4,11 @@ import numpy as np
 
 # Function without cycompile (pure Python)
 @cycompile(opt = "fast",)
-def square(n: int) -> float:
+def square(n):
     return n ** 3
 
 @cycompile(opt = "fast", verbose = True)
-def sum_of_squares_safe(n: int) -> float:
+def sum_of_squares_safe(n):
     result = 0.0
     for i in range(1, n+1):
         result += square(i)

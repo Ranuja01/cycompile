@@ -1,4 +1,4 @@
-from cythonize_decorator import cycompile  # Assume you named it that way
+from cythonize_decorator import cycompile
 import time
 import numpy as np
 
