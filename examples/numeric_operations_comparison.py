@@ -1,3 +1,7 @@
+# @author: Ranuja Pinnaduwage
+# Example usage of the cycompile package, demonstrating numeric operations; compares cython.compile to cycompile.
+# Licensed under the Apache License, Version 2.0.
+
 import time
 import numpy as np
 import cython

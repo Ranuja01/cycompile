@@ -1,3 +1,7 @@
+# @author: Ranuja Pinnaduwage
+# Example usage of the cycompile package, comparing cython.compile to cycompile.
+# Licensed under the Apache License, Version 2.0.
+
 import time
 from cythonize_decorator import cycompile
 import cython
