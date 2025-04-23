@@ -1,6 +1,6 @@
 build/
 *.egg-info/
 dist/
-.cycache/
+cycache/
 __pycache__/
 comparison_table.txt
