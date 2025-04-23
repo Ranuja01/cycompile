@@ -2,60 +2,44 @@ import os
 import sys
 import inspect
 import platform
-import pyximport
-import subprocess
 import hashlib
 import time
-import shutil
 import tempfile
 import contextlib
 import io
-import pathlib
 import ast
 from pathlib import Path
 from functools import wraps
 from Cython.Build import cythonize
 from setuptools import Extension, setup
-from cython import compile
 from collections import OrderedDict
 
+# Define cache of functions compiled within the same session
 compiled_func_cache = OrderedDict()
 MAX_CACHE_SIZE = 500
 
+# Directory for cython and compiled binary files
 CACHE_DIR = Path.cwd() / '.cycache'
 
+# Create the directory if it doesn't exist
 if not CACHE_DIR.exists():
     CACHE_DIR.mkdir(parents=True)
 
 # Windows has a separate (.pyd) extension
 IS_WINDOWS = platform.system() == "Windows"
 
-def get_called_functions(func_source, available_functions):
-    """
-    Extracts function names that are called inside the function's source code.
-    Uses the Abstract Syntax Tree (AST) to safely parse the code and detect
-    actual function calls, ignoring other uses of function names.
-    """
-    # Parse the source code into an AST
-    tree = ast.parse(func_source)
-    
-    called = set()
+def generate_cython_source(func):
 
-    # Traverse the AST
-    for node in ast.walk(tree):
-        # Check if the node is a function call
-        if isinstance(node, ast.Call):
-            # Get the name of the function being called (node.func can be a name or an attribute)
-            if isinstance(node.func, ast.Name):  # direct function call, e.g., func()
-                called.add(node.func.id)
-            elif isinstance(node.func, ast.Attribute):  # attribute-based call, e.g., obj.func()
-                if isinstance(node.func.value, ast.Name):  # only consider the function if it's part of a class or object
-                    called.add(node.func.attr)
-    
-    # Filter out any functions not in the available functions list
-    called = [name for name in called if name in available_functions]
-    
-    return called
+    # Extract imports from the original Python file
+    imports = extract_all_imports(func)
+
+    # Get the function's source code without decorators
+    source_code = remove_decorators(func)
+
+    # Add imports to the Cython file source code
+    cython_source_code = f"{imports}\n\n{source_code}"
+
+    return cython_source_code
 
 def extract_all_imports(func, exclude=("cythonize_decorator", "cycompile")):
     """
@@ -100,19 +84,38 @@ def extract_all_imports(func, exclude=("cythonize_decorator", "cycompile")):
     # Combine the imports from the file and the imports for functions called within the function
     return f"{script_imports}\n{user_func_imports}"
 
+def get_function_names(module):
+    """
+    Get a list of function names defined in the same module.
+    """
+    return [name for name, obj in inspect.getmembers(module, inspect.isfunction)]
 
-def generate_cython_source(func):
+def get_called_functions(func_source, available_functions):
+    """
+    Extracts function names that are called inside the function's source code.
+    Uses the Abstract Syntax Tree (AST) to safely parse the code and detect
+    actual function calls, ignoring other uses of function names.
+    """
+    # Parse the source code into an AST
+    tree = ast.parse(func_source)
+    
+    called = set()
 
-    # Extract imports from the original Python file
-    imports = extract_all_imports(func)
-
-    # Get the function's source code without decorators
-    source_code = remove_decorators(func)
-
-    # Add imports to the Cython file source code
-    cython_source_code = f"{imports}\n\n{source_code}"
-
-    return cython_source_code
+    # Traverse the AST
+    for node in ast.walk(tree):
+        # Check if the node is a function call
+        if isinstance(node, ast.Call):
+            # Get the name of the function being called (node.func can be a name or an attribute)
+            if isinstance(node.func, ast.Name):  # direct function call, e.g., func()
+                called.add(node.func.id)
+            elif isinstance(node.func, ast.Attribute):  # attribute-based call, e.g., obj.func()
+                if isinstance(node.func.value, ast.Name):  # only consider the function if it's part of a class or object
+                    called.add(node.func.attr)
+    
+    # Filter out any functions not in the available functions list
+    called = [name for name in called if name in available_functions]
+    
+    return called
 
 def remove_decorators(func):
     """
@@ -146,12 +149,6 @@ def remove_decorators(func):
             stripped_lines.append(line)
 
     return "\n".join(stripped_lines)
-
-def get_function_names(module):
-    """
-    Get a list of function names defined in the same module.
-    """
-    return [name for name, obj in inspect.getmembers(module, inspect.isfunction)]
 
 def run_cython_compile(pyx_path, output_dir, verbose, opt="safe",
                        extra_compile_args=None, compiler_directives=None):
@@ -204,16 +201,28 @@ def run_cython_compile(pyx_path, output_dir, verbose, opt="safe",
             )
 
 def cycompile(opt="safe", extra_compile_args=None, compiler_directives=None, verbose = False):
+    
+    compiled_func = None
+    
     def decorator(func):
+       
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs):            
+            nonlocal compiled_func
+            
+            # Added this check to ensure the compiled function is only lazily loaded when needed, 
+            # and avoid using incorrect or uncompiled wrappers during mutual recursion calls.
+
+            if compiled_func is not None:
+                return compiled_func(*args, **kwargs)
+ 
             
             params = (str(compiler_directives) if compiler_directives is not None else "") + \
                      (str(extra_compile_args) if extra_compile_args is not None else "") + \
                      str(opt)
             
             hash_key = "mod_" + hashlib.md5((params + inspect.getsource(func)).encode()).hexdigest()
-            
+         
             if IS_WINDOWS:
                 extension = "pyd"
             else:
@@ -257,7 +266,7 @@ def cycompile(opt="safe", extra_compile_args=None, compiler_directives=None, ver
                 
                 if verbose:
                     print(f"Compilation took {time.time() - start_time:.2f} seconds.")
-                
+              
             # Add the cache directory to sys.path so Python can find the .so file
             sys.path.append(str(CACHE_DIR))
             
@@ -272,10 +281,11 @@ def cycompile(opt="safe", extra_compile_args=None, compiler_directives=None, ver
                     compiled_func_cache.popitem(last=False)  # Remove the oldest
                 compiled_func_cache[hash_key] = compiled_func
                                 
-                return compiled_func(*args, **kwargs)
+                
             finally:
-                # Clean up by removing the cache directory from sys.path
                 sys.path.pop()
     
+            return compiled_func(*args, **kwargs)
+        
         return wrapper
     return decorator

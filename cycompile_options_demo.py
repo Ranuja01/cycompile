@@ -1,6 +1,7 @@
 from cythonize_decorator import cycompile
 import time
 import numpy as np
+import cython
 
 # Function without cycompile (pure Python)
 def sum_of_squares_python(n: int) -> float:
