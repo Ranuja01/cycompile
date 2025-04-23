@@ -4,7 +4,7 @@ from cythonize_decorator import cycompile
 def is_even(n):
     if n == 0:
         return True
-    else:     
+    else:             
         return is_odd(n - 1)
     
 @cycompile(opt = "safe", verbose = True)

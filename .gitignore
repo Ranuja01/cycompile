@@ -3,3 +3,4 @@ build/
 dist/
 .cycache/
 __pycache__/
+comparison_table.txt
