@@ -1,24 +1,27 @@
 # @author: Ranuja Pinnaduwage
-# Example usage of the cycompile package, demonstrating mutual recursion support.
+# File: mutual_recursion_demo.py
+# Demonstrates mutual recursion support with the cycompile package.
 # Licensed under the Apache License, Version 2.0.
 
-import cycompile
+from cycompile import cycompile
 
-@cycompile(opt = "fast", verbose = True)
+# Determines if a number is even using mutual recursion
+@cycompile(opt="fast", verbose=True)
 def is_even(n):
     if n == 0:
         return True
-    else:             
+    else:
         return is_odd(n - 1)
-    
-@cycompile(opt = "safe", verbose = True)
+
+# Determines if a number is odd using mutual recursion
+@cycompile(opt="safe", verbose=True)
 def is_odd(n):
     if n == 0:
         return False
     else:
         return is_even(n - 1)
 
-# Example usage
+# --- Example usage ---
 number = 5
 print(f"Is {number} even? {is_even(number)}")
 print(f"Is {number} odd? {is_odd(number)}")
