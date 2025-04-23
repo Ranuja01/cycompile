@@ -2,7 +2,7 @@
 # Example usage of the cycompile package, demonstrating mutual recursion support.
 # Licensed under the Apache License, Version 2.0.
 
-from cythonize_decorator import cycompile
+import cycompile
 
 @cycompile(opt = "fast", verbose = True)
 def is_even(n):

@@ -2,7 +2,7 @@
 # Example usage of the cycompile package, demonstrating possible parameter settings.
 # Licensed under the Apache License, Version 2.0.
 
-from cythonize_decorator import cycompile
+import cycompile
 import time
 import numpy as np
 import cython

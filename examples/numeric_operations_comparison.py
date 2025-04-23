@@ -7,8 +7,8 @@ import numpy as np
 import cython
 from functools import wraps
 
-# Assuming you have your decorator cycompile
-from cythonize_decorator import cycompile  # Replace with actual import
+
+import cycompile  
 
 # Assuming Cython is set up
 @cython.compile

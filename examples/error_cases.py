@@ -3,7 +3,7 @@
 # Licensed under the Apache License, Version 2.0.
 
 
-from cythonize_decorator import cycompile
+import cycompile
 
 @cycompile()
 def simple_function():    

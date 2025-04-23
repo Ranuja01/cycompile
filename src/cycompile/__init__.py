@@ -20,6 +20,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from cythonize_decorator import cycompile
+from .cythonize_decorator import cycompile
 
 __all__ = ['cycompile']
