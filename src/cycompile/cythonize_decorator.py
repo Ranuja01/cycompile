@@ -30,6 +30,7 @@ import tempfile
 import contextlib
 import io
 import ast
+import shutil
 from pathlib import Path
 from functools import wraps
 from Cython.Build import cythonize
@@ -52,6 +53,14 @@ if not CACHE_DIR.exists():
 
 # Determine if the platform is Windows.
 IS_WINDOWS = platform.system() == "Windows"
+
+def clear_cache():
+    path = Path(CACHE_DIR)
+    if path.exists():
+        shutil.rmtree(path)
+        print(f"[cycompile] Cleared cache directory: '{CACHE_DIR}'")
+    else:
+        print(f"[cycompile] No cache directory found at: '{CACHE_DIR}'")
 
 def generate_cython_source(func):
     """
