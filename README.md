@@ -6,7 +6,7 @@ A Python package for function-level optimization, leveraging Cython to achieve C
 
 This project was born out of a desire to **democratize performance optimization**. Too often, speeding up Python code means diving into Cython-specific syntax, manually restructuring your logic, or switching to a different language altogether. `CyCompile` aims to change that by making it as easy as adding a decorator.
 
-Unlike `cython.compile()`, which is great for scripts and modules, `CyCompile` is built for **function-level optimization**, ideal for notebooks, prototyping, and **well-suited for production environments**. It allows for **selective performance boosts** without the need to alter your whole codebase.
+Unlike `Cython's` cython.compile(), which is great for scripts and modules, `CyCompile's` cycompile is built for **function-level optimization**, ideal for notebooks, prototyping, and **well-suited for production environments**. It allows for **selective performance boosts** without the need to alter your whole codebase.
 
 At its core, this project is about **lowering the barrier** between Python's elegance and C-level speed, empowering more developers to harness performance when they need it, without becoming compiler experts.
 
@@ -40,6 +40,7 @@ For full functionality, you must have a C++ compiler installed. If you do not al
   cl
   ```
 - **Note** Simply installing MSVC build tools may not properly configure your system. You may need to set environment variables or update your system's PATH to include cl.exe.
+
 ### Linux  
 - Install the necessary C++ compiler and build tools:
   - For Ubuntu: 
@@ -54,6 +55,7 @@ For full functionality, you must have a C++ compiler installed. If you do not al
   ```sh
   g++ --version 
   ```
+
 ### For MacOS
 - Install Apple's command-line developer tools (includes clang for C++):
   
@@ -85,10 +87,9 @@ from cycompile import cycompile
 ```
 **Note:** The first execution of a tagged function compiles it into a C-based binary, meaning it will take longer than usual (a few seconds extra). After this, the speed improvements will be permanent as long as the cache is not emptied and the function or the compilation settings have not changed.
 
-You can now bring C/C++ level performance to any function with a single decorator. Below are a few examples demonstrating `CyCompile` in action. If you're looking for a deeper dive with performance comparisons, advanced configurations, and design insights, check out the full walkthrough on Medium (add link).
+You can now bring C/C++ level performance to any function with a single decorator. Below are a few examples demonstrating the `CyCompile` tool in action. If you're looking for a deeper dive with performance comparisons, advanced configurations, and design insights, check out the full walkthrough on Medium (add link).
 
 The following examples are excerpts from the examples folder (add link) in this repository, with full walkthroughs available in the accompanying Medium article (add link).
-
 
 ### Basic Usage ###
 Here's a simple demonstration of how to use the @cycompile decorator:
@@ -251,6 +252,7 @@ number = 5
 print(f"Is {number} even? {is_even(number)}")
 print(f"Is {number} odd? {is_odd(number)}")
 ```
+
 ### Using Classes and Objects ###
 While full class and method decoration is not yet supported by the cycompile decorator, creating objects and passing them into compiled functions works seamlessly, as shown below:
 ```python
@@ -273,3 +275,10 @@ class MyClass:
 
 ```
 These examples demonstrate that cycompile supports object-oriented programming workflows by allowing both the creation and usage of class instances within compiled functions, even if the classes themselves cannot be compiled using the decorator (yet).
+
+## Conclusion
+I am very proud of this project and its goal. I hope to bridge the performance gap between Python and C while still allowing users to write their Python code as normal. This project has several strengths, specifically in allowing users to control exactly which portions of their code get compiled and what parameters are used during compilation. This flexibility is huge, as it lets users design their code however they like without worrying that the entire call stack involved in a tagged function will be affected by its compilation rules.
+
+As I mentioned a few times in the README, there are a few areas that need improvement, and I aim to address them in the future. Currently, classes are not fully supported and therefore cannot be directly converted using this project, though user-defined classes can still be used in tagged functions. Additionally, I have yet to test this package with asynchronous functions commonly used in network programming. If I had to guess, they might present some challenges, as transitioning from Python async functions to C doesn't seem like the smoothest process.
+
+With future releases and feedback from the community, I'm excited to continue improving the package and addressing any issues that arise. Thanks for reading!  
