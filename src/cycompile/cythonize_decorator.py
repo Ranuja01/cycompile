@@ -62,14 +62,10 @@ def clear_cache():
     for file in path.rglob("*"):
         try:
             if file.is_file():
-                # Avoid trying to delete compiled extensions which may be locked
-                if file.suffix in [".pyd", ".so", ".dll"]:
-                    undeleted_files.append(file)
-                    continue
                 file.unlink()
             elif file.is_dir():
                 shutil.rmtree(file)
-        except Exception as e:
+        except Exception:
             undeleted_files.append(file)
 
     if undeleted_files:
