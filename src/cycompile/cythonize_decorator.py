@@ -53,10 +53,10 @@ IS_WINDOWS = platform.system() == "Windows"
 def clear_cache():
     path = Path(CACHE_DIR)
     if not path.exists():
-        print(f"[cycompile] Cache directory does not exist: '{CACHE_DIR}'")
+        print(f"[cycompile-log] Cache directory does not exist: '{CACHE_DIR}'")
         return
 
-    print(f"[cycompile] Clearing cache from: '{CACHE_DIR}'\n")
+    print(f"[cycompile-log] Clearing cache from: '{CACHE_DIR}'\n")
     undeleted_files = []
 
     for file in path.rglob("*"):
@@ -69,12 +69,12 @@ def clear_cache():
             undeleted_files.append(file)
 
     if undeleted_files:
-        print("[cycompile] Some files could not be deleted (possibly still in use):")
+        print("[cycompile-log] Some files could not be deleted (possibly still in use):")
         for f in undeleted_files:
             print(f" - {f}")
-        print("\n[cycompile] You may need to restart your Python session to release locked files.")
+        print("\n[cycompile-log] You may need to restart your Python session to release locked files.")
     else:
-        print("[cycompile] Cache cleared successfully.")
+        print("[cycompile-log] Cache cleared successfully.")
 
 def generate_cython_source(func):
     """
@@ -438,13 +438,13 @@ def cycompile(opt="safe", extra_compile_args=None, compiler_directives=None, ver
                 # If a match is found in the in-memory cache, use it.
                 if hash_key in compiled_func_cache:
                     if verbose:
-                        print(f"Using cached compiled version for {func.__name__} from this session.")
+                        print(f"[cycompile-log] Using cached compiled version for {func.__name__} from this session.")
                     compiled_func = compiled_func_cache[hash_key]
                     return compiled_func(*args, **kwargs)
                 else:
                     # If a match is found in the cache directory, use it.
                     if verbose:
-                        print(f"Using cached compiled version for {func.__name__} from cache folder.")
+                        print(f"[cycompile-log] Using cached compiled version for {func.__name__} from cache folder.")
             else:
                 # If no matching compiled file is found, we proceed to compile the function.
                 
@@ -453,9 +453,9 @@ def cycompile(opt="safe", extra_compile_args=None, compiler_directives=None, ver
                 
                 # Print verbose messages if enabled, including compile options.
                 if verbose:
-                    print(f"Compiling {func.__name__} with options: {opt}")
-                    print(f"Extra compile args: {extra_compile_args}")
-                    print(f"Compiler directives: {compiler_directives}")
+                    print(f"[cycompile-log] Compiling {func.__name__} with options: {opt}")
+                    print(f"[cycompile-log] Extra compile args: {extra_compile_args}")
+                    print(f"[cycompile-log] Compiler directives: {compiler_directives}")
                     
                     start_time = time.time()
             
@@ -475,7 +475,7 @@ def cycompile(opt="safe", extra_compile_args=None, compiler_directives=None, ver
                 )
                 
                 if verbose:
-                    print(f"Compilation took {time.time() - start_time:.2f} seconds.")
+                    print(f"[cycompile-log] Compilation took {time.time() - start_time:.2f} seconds.")
               
             # Add the cache directory to sys.path so Python can find the .so file.
             sys.path.append(str(CACHE_DIR))
