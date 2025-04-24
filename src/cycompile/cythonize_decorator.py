@@ -52,11 +52,33 @@ IS_WINDOWS = platform.system() == "Windows"
 
 def clear_cache():
     path = Path(CACHE_DIR)
-    if path.exists():
-        shutil.rmtree(path)
-        print(f"[cycompile] Cleared cache directory: '{CACHE_DIR}'")
+    if not path.exists():
+        print(f"[cycompile] Cache directory does not exist: '{CACHE_DIR}'")
+        return
+
+    print(f"[cycompile] Clearing cache from: '{CACHE_DIR}'\n")
+    undeleted_files = []
+
+    for file in path.rglob("*"):
+        try:
+            if file.is_file():
+                # Avoid trying to delete compiled extensions which may be locked
+                if file.suffix in [".pyd", ".so", ".dll"]:
+                    undeleted_files.append(file)
+                    continue
+                file.unlink()
+            elif file.is_dir():
+                shutil.rmtree(file)
+        except Exception as e:
+            undeleted_files.append(file)
+
+    if undeleted_files:
+        print("[cycompile] Some files could not be deleted (possibly still in use):")
+        for f in undeleted_files:
+            print(f" - {f}")
+        print("\n[cycompile] You may need to restart your Python session to release locked files.")
     else:
-        print(f"[cycompile] No cache directory found at: '{CACHE_DIR}'")
+        print("[cycompile] Cache cleared successfully.")
 
 def generate_cython_source(func):
     """
