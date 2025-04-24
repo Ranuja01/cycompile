@@ -144,7 +144,7 @@ The core options you can customize:
   - [Here](https://caiorss.github.io/C-Cpp-Notes/compiler-flags-options.html) is a list of Unix based flags.
   - [Here](https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170) is a list of Windows based flags.
 
-**Note:** The "fast" optimization option may not always provide the best results. It applies the most aggressive optimizations, but depending on the use case, this can lead to excessive overhead or be inappropriate for certain functions. Additionally, aggressive optimization may result in a loss of accuracy for applications requiring precision. For best results, we recommend using the 'custom' option with your own specified parameters."
+**Note:** The "fast" optimization option may not always provide the best results. It applies the most aggressive optimizations, but depending on the use case, this can lead to excessive overhead or be inappropriate for certain functions. Additionally, aggressive optimization may result in a loss of accuracy for applications requiring precision. For best results, we recommend using the 'custom' option with your own specified parameters.
 
 Below are a few curated examples illustrating how to use these options effectively:
 
