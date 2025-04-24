@@ -47,10 +47,6 @@ MAX_CACHE_SIZE = 500
 package_dir = Path(os.path.dirname(__file__))  # Get the directory where the package is installed
 CACHE_DIR = package_dir / 'cycache'  # Set 'cycache' folder within the package directory
 
-# Create the directory if it doesn't exist.
-if not CACHE_DIR.exists():
-    CACHE_DIR.mkdir(parents=True)
-
 # Determine if the platform is Windows.
 IS_WINDOWS = platform.system() == "Windows"
 
@@ -361,6 +357,10 @@ def cycompile(opt="safe", extra_compile_args=None, compiler_directives=None, ver
     Returns:
     - A decorator that compiles the wrapped function with the specified options.
     """
+    
+    # Create the directory if it doesn't exist.
+    if not CACHE_DIR.exists():
+        CACHE_DIR.mkdir(parents=True)
     
     # Will store the compiled function once generated.
     compiled_func = None
