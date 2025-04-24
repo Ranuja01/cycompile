@@ -138,10 +138,12 @@ While CyCompile works out-of-the-box with zero configuration, it also gives you 
 The core options you can customize:
 
 - opt: Choose from predefined optimization levels like "safe", "fast", or "custom".
-- compiler_directives: Pass any Cython compiler directives to influence how code is translated.
+- compiler_directives: Pass any [Cython compiler directives](https://cython.readthedocs.io/en/latest/src/userguide/source_files_and_compilation.html#compiler-directives)   to influence how code is translated.
 - extra_compile_args: Add custom flags passed directly to the C++ compiler for deeper tuning.
+  - [Here](https://caiorss.github.io/C-Cpp-Notes/compiler-flags-options.html) is a list of Unix based flags.
+  - [Here](https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170) is a list of Windows based flags.
 
-**Note:** You may sometimes find that the "fast" option may not always be the fastest, it simply applies the most aggressive optimizations. Depending on the use-case, this might introduce more overhead or be inappropriate for the given function. It should also be noted that aggressive optimization could lead to loss of accuracy in applications that require precision. For best results, use custom with specified parameters.
+**Note:** The "fast" optimization option may not always provide the best results. It applies the most aggressive optimizations, but depending on the use case, this can lead to excessive overhead or be inappropriate for certain functions. Additionally, aggressive optimization may result in a loss of accuracy for applications requiring precision. For best results, we recommend using the 'custom' option with your own specified parameters."
 
 Below are a few curated examples illustrating how to use these options effectively:
 
