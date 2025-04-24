@@ -6,7 +6,9 @@ A Python package for function-level optimization, leveraging Cython to achieve C
 
 This project was born out of a desire to **democratize performance optimization**. Too often, speeding up Python code means diving into Cython-specific syntax, manually restructuring your logic, or switching to a different language altogether. `CyCompile` aims to change that by making it as easy as adding a decorator.
 
-Unlike `Cython's` cython.compile(), which is great for scripts and modules, `CyCompile's` cycompile is built for **function-level optimization**, ideal for notebooks, prototyping, and **well-suited for production environments**. It allows for **selective performance boosts** without the need to alter your whole codebase.
+Unlike `Numba's` njit, which may implicitly compile all helper functions and dependencies, and `Cython's` cython.compile(), which can be used for function-level compilation but is more commonly applied in full-module or .pyx workflows, `CyCompile's` cycompile is designed specifically for precise, **function-by-function optimization**.
+
+It enables **targeted acceleration** of individual functions, making it especially well-suited for **notebooks**, **rapid prototyping**, or **production environments** where **precise performance improvements** are needed without impacting the rest of the codebase.
 
 At its core, this project is about **lowering the barrier** between Python's elegance and C-level speed, empowering more developers to harness performance when they need it, without becoming compiler experts.
 
