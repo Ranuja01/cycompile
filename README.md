@@ -20,7 +20,7 @@ Where it stands out:
 - **Non-invasive design** &mdash; requires no changes to your existing project structure or imports, just add a decorator.
 - **Intelligent caching based on source** &mdash; minimizes unnecessary recompilation, with manual cache clearing available to avoid stale binaries.
 
-**Note:** Throughout this README, you'll see `CyCompile` used as the name of the project, reflecting the branding and overall mission of the tool. When referring to the actual Python package or the module itself, we use cycompile in lowercase, which is the official package name on PyPI.
+**Note:** Throughout this README, you'll see `CyCompile` used as the name of the project, reflecting the branding and overall mission of the tool. When referring to the actual Python package or the module itself, I use cycompile in lowercase, which is the official package name on PyPI.
 
 **Note:** This project includes C++ components and requires the ability to compile both C++ and Python code. While the required Python components are automatically included during installation, you must ensure you have a C++ compiler installed to build the necessary C++ files. Please refer to the build requirements below for more information.
 
@@ -144,7 +144,7 @@ The core options you can customize:
   - [Here](https://caiorss.github.io/C-Cpp-Notes/compiler-flags-options.html) is a list of Unix based flags.
   - [Here](https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170) is a list of Windows based flags.
 
-**Note:** The "fast" optimization option may not always provide the best results. It applies the most aggressive optimizations, but depending on the use case, this can lead to excessive overhead or be inappropriate for certain functions. Additionally, aggressive optimization may result in a loss of accuracy for applications requiring precision. For best results, we recommend using the 'custom' option with your own specified parameters.
+**Note:** The "fast" optimization option may not always provide the best results. It applies the most aggressive optimizations, but depending on the use case, this can lead to excessive overhead or be inappropriate for certain functions. Additionally, aggressive optimization may result in a loss of accuracy for applications requiring precision. For best results, I recommend using the 'custom' option with your own specified parameters.
 
 Below are a few curated examples illustrating how to use these options effectively:
 
