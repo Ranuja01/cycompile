@@ -26,6 +26,8 @@ Where it stands out:
 
 **Note:** This project includes C++ components and requires the ability to compile both C++ and Python code. While the required Python components are automatically included during installation, you must ensure you have a C++ compiler installed to build the necessary C++ files. Please refer to the build requirements below for more information.
 
+**Note:** This project includes additional documentation that provides a deeper dive into various use cases. You can find the full write-up on Medium [here]().
+
 ## Build Requirements
 Ensure you have Python 3.8 or later installed on your system, along with an updated version of pip. All required Python dependencies will be automatically installed during package installation.
 
@@ -89,9 +91,9 @@ from cycompile import cycompile
 ```
 **Note:** The first execution of a tagged function compiles it into a C-based binary, meaning it will take longer than usual (a few seconds extra). After this, the speed improvements will be permanent as long as the cache is not emptied and the function or the compilation settings have not changed.
 
-You can now bring C/C++ level performance to any function with a single decorator. Below are a few examples demonstrating the `CyCompile` tool in action. If you're looking for a deeper dive with performance comparisons, advanced configurations, and more complex use cases, check out the full walkthrough on Medium (add link).
+You can now bring C/C++ level performance to any function with a single decorator. Below are a few examples demonstrating the `CyCompile` tool in action. If you're looking for a deeper dive with performance comparisons, advanced configurations, and more complex use cases, check out the full walkthrough on [Medium](add link).
 
-The following examples are excerpts from the [examples folder](https://github.com/Ranuja01/cycompile/tree/main/examples) in this repository, with full walkthroughs available in the accompanying Medium article (add link).
+The following examples are excerpts from the [examples folder](https://github.com/Ranuja01/cycompile/tree/main/examples) in this repository, with full walkthroughs available in the accompanying [Medium article](add link).
 
 ### Basic Usage ###
 Here's a simple demonstration of how to use `CyCompile's`cycompile decorator:
@@ -337,7 +339,7 @@ This performance boost is especially useful in scenarios requiring large numbers
 
 By integrating `CyCompile` into your existing workflows, whether for machine learning, numerical algorithms, or custom algorithms, you can fine-tune specific code segments that aren't already optimized by libraries like TensorFlow or NumPy. This allows you to harness the power of C-level optimizations for areas of your code that are computationally expensive but still need custom handling.
 
-For more detailed examples and performance benchmarks, see the full Medium article (add link).
+For more detailed examples and performance benchmarks, see the full [Medium article](add link).
 
 ## Conclusion
 I am very proud of this project and its goal. I hope to bridge the performance gap between Python and C while still allowing users to write their Python code as normal. This project has several strengths, specifically in allowing users to control exactly which portions of their code get compiled and what parameters are used during compilation. This flexibility is huge, as it lets users design their code however they like without worrying that the entire call stack involved in a tagged function will be affected by its compilation rules.
