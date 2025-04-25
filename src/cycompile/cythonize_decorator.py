@@ -4,7 +4,7 @@
 This file is part of cycompile, a Python package for optimizing function performance via a Cython decorator.
 
 Description:
-This file defines the initialization of the package.
+This file defines the core logic of the tool.
 
 Copyright (C) 2025 Ranuja Pinnaduwage  
 Licensed under the Apache License, Version 2.0 (the "License");  
