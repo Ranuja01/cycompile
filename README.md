@@ -1,5 +1,5 @@
 # CyCompile: Democratizing Performance
-A Python package for function-level optimization, leveraging Cython to achieve C/C++ level performance through a simple decorator.
+`CyCompile` is a Python package designed to help developers bring native C/C++ level performance to Python functions with just a simple decorator.
 ## About This Project
 
 `CyCompile` is a decorator-based tool for Python developers who want native performance without sacrificing the simplicity and flexibility of pure Python. Built on top of **Cython**, it compiles individual Python functions into binary modules with a one-time performance cost, then seamlessly reuses them via intelligent caching for future calls.
@@ -91,10 +91,10 @@ from cycompile import cycompile
 
 You can now bring C/C++ level performance to any function with a single decorator. Below are a few examples demonstrating the `CyCompile` tool in action. If you're looking for a deeper dive with performance comparisons, advanced configurations, and more complex use cases, check out the full walkthrough on Medium (add link).
 
-The following examples are excerpts from the examples folder (add link) in this repository, with full walkthroughs available in the accompanying Medium article (add link).
+The following examples are excerpts from the [examples folder](https://github.com/Ranuja01/cycompile/tree/main/examples) in this repository, with full walkthroughs available in the accompanying Medium article (add link).
 
 ### Basic Usage ###
-Here's a simple demonstration of how to use the @cycompile decorator:
+Here's a simple demonstration of how to use `CyCompile's`cycompile decorator:
 ```python
 from cycompile import cycompile
 
@@ -102,12 +102,13 @@ from cycompile import cycompile
 def simple_function():    
     print("[cycompile] This is a simple function.")
 ```
-The first time simple_function is called, it will be compiled into a binary. On subsequent calls, the cached binary will be reused bringing C-level performance with intelligent, collision-free caching. Compiled binaries are reused automatically, but can also be cleared manually when needed. The next example showcases CyCompile's ability to clear its compiled binary cache:
+The first time simple_function is called, it will be compiled into a binary. On subsequent calls, the cached binary will be reused bringing C-level performance with intelligent, collision-free caching. Compiled binaries are reused automatically, but can also be cleared manually when needed. The next example showcases `CyCompile's` ability to clear its compiled binary cache:
 ```python
 from cycompile import clear_cache
 
 clear_cache()
 ```
+With this, the user can control how large the cache becomes on their system.
 
 ### Using User-Defined and Imported Functions ###
 Now let's look at a more sophisticated example that incorporates a user-defined helper function and an imported library:
@@ -136,7 +137,7 @@ Additionally, this example highlights smooth compatibility with external librari
 
 ### Fine-Grained Performance Control ### 
 
-While CyCompile works out-of-the-box with zero configuration, it also gives you the ability to fine-tune how your functions are compiled. Whether you're aiming for safer defaults, maximum speed, or somewhere in between — you have options.
+While `CyCompile's` cycompile works out-of-the-box with zero configuration, it also gives you the ability to fine-tune how your functions are compiled. Whether you're aiming for safer defaults, maximum speed, or somewhere in between — you have options.
 
 The core options you can customize:
 
@@ -146,7 +147,7 @@ The core options you can customize:
   - [Here](https://caiorss.github.io/C-Cpp-Notes/compiler-flags-options.html) is a list of Unix based flags.
   - [Here](https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170) is a list of Windows based flags.
 
-**Note:** The "fast" optimization option may not always provide the best results. It applies the most aggressive optimizations, but depending on the use case, this can lead to excessive overhead or be inappropriate for certain functions. Additionally, aggressive optimization may result in a loss of accuracy for applications requiring precision. For best results, I recommend using the 'custom' option with your own specified parameters.
+**Note:** The "fast" optimization option may not always provide the best results. It applies the most aggressive optimizations, but depending on the use case, this can lead to excessive overhead or be inappropriate for certain functions. Additionally, aggressive optimization may result in a loss of accuracy for applications requiring precision. For best results, consider using the 'custom' option with your own specified parameters.
 
 Below are a few curated examples illustrating how to use these options effectively:
 
@@ -219,7 +220,7 @@ def sum_of_squares_custom(n: int) -> float:
 **Important**: When using the custom option, language_level is not automatically set. If omitted, Cython will default to Python 2 syntax and semantics. To ensure compatibility with modern Python code, it's highly recommended to explicitly include 'language_level': 3 in your custom directives as seen in the example above.
 
 ### Using Recursive Functions ### 
-Many decorators, such as cython.compile(), struggle with recursive functions. Fortunately, cycompile excels at this, making it ideal for optimizing recursive logic. The following example demonstrates how you can use cycompile with a simple recursive function:
+Many decorators, like `Cython's` cython.compile(), struggle with recursive functions, but `CyCompile's` cycompile excels at optimizing them, making it ideal for optimizing recursive logic. The following example demonstrates how you can use cycompile with a simple recursive function:
 ```python
 from cycompile import cycompile
 
@@ -257,7 +258,7 @@ print(f"Is {number} odd? {is_odd(number)}")
 ```
 
 ### Using Classes and Objects ###
-While full class and method decoration is not yet supported by the cycompile decorator, creating objects and passing them into compiled functions works seamlessly, as shown below:
+While full class and method decoration is not yet supported by the `CyCompile's` cycompile decorator, creating objects and passing them into compiled functions works seamlessly, as shown below:
 ```python
 from cycompile import cycompile
 
@@ -275,9 +276,68 @@ def object_creation_function():
 class MyClass:
     def instance_method(self):
         print("[regular] This is an instance method.")
-
 ```
-These examples demonstrate that cycompile supports object-oriented programming workflows by allowing both the creation and usage of class instances within compiled functions, even if the classes themselves cannot be compiled using the decorator (yet).
+These examples demonstrate that cycompile supports object-oriented programming workflows by allowing both the creation and usage of class instances within compiled functions, even if the classes themselves cannot be compiled using the decorator. Full class support is curently under development and hopefully will be available soon!
+
+### Advanced Cases ###
+`CyCompile` shines in optimizing performance-intensive sections of Python code, especially when dealing with custom operations or low-level tasks that can benefit from the power of C-level optimizations. Below are some examples showcasing how `CyCompile` integrates seamlessly into machine learning, numerical algorithms, and custom algorithm implementations.
+
+**Machine Learning & Deep Learning (TensorFlow, Keras)**
+
+While TensorFlow and Keras are already highly optimized for performance, there are still areas such as custom operations, data preprocessing, or post-processing steps which can benefit from `CyCompile's` cycompile. For example, the following example shows how cycompile integrates seamlessly into a training pipeline. Although cycompile may not significantly speed up the actual model training (since TensorFlow already handles that efficiently), it can optimize areas like data preparation or custom loss functions:
+
+```python
+@cycompile(opt="fast", verbose=True)
+def train_and_evaluate_cycompile():
+    # Your TensorFlow model training and evaluation code
+    # Works seamlessly with cycompile
+```
+The key takeaway here is that cycompile can enhance other parts of the pipeline that TensorFlow might not optimize, like custom data transformations or post-processing steps.
+
+**Numerical Algorithms**
+
+`CyCompile's` cycompile provides an easy way to optimize common numerical operations that may not be optimized by existing libraries like NumPy. Below are a few examples from benchmark tests comparing `CyCompile` with Cython and pure Python implementations:
+- Elementwise Square Operation: In the case of a simple elementwise operation like squaring the elements of an array, cycompile outperforms cython.compile and pure Python, showing its ability to optimize typical numeric operations:
+  ```python
+  @cycompile(opt="fast")
+  def elementwise_square_optimized(arr):
+      return np.array([x**2 for x in arr])
+  ```
+- Matrix Multiplication: For matrix multiplication using NumPy's np.dot(), which is already optimized in C, the performance improvement with cycompile is marginal. However, for custom operations or non-NumPy tasks, `CyCompile` provides noticeable performance benefits:
+  ```python
+  @cycompile(opt="fast")
+  def matrix_multiplication_optimized(A, B):
+      return np.dot(A, B)
+  ```
+- Summing Array Elements: In cases like summing array elements in a loop, cycompile demonstrates significant performance improvements over pure Python code, even when compared to cython.compile:
+  ```python
+  @cycompile(opt="fast")
+  def sum_elements_optimized(arr):
+      total = 0.0
+      for x in arr:
+          total += x
+      return total
+  ```
+
+**Custom Algorithms & Simulations**
+
+`CyCompile's` cycompile is also highly effective for custom algorithms that require extensive iterative computations. For example, the Euler Method, a numerical technique that relies on repeated calculations, is an excellent example of where `CyCompile` excels. By optimizing these iterative steps, `CyCompile` significantly reduces execution time, especially in simulation-based or complex calculation tasks:
+
+```python
+@cycompile(opt="fast")
+def euler_method_optimized(f, y0, t0, t_end, dt):
+    t = np.arange(t0, t_end, dt)
+    y = np.zeros(len(t))
+    y[0] = y0
+    for i in range(1, len(t)):
+        y[i] = y[i-1] + dt * f(t[i-1], y[i-1])
+    return y
+```
+This performance boost is especially useful in scenarios requiring large numbers of iterations or updates, such as in simulations or complex calculations.
+
+By integrating `CyCompile` into your existing workflows, whether for machine learning, numerical algorithms, or custom algorithms, you can fine-tune specific code segments that aren't already optimized by libraries like TensorFlow or NumPy. This allows you to harness the power of C-level optimizations for areas of your code that are computationally expensive but still need custom handling.
+
+For more detailed examples and performance benchmarks, see the full Medium article (add link).
 
 ## Conclusion
 I am very proud of this project and its goal. I hope to bridge the performance gap between Python and C while still allowing users to write their Python code as normal. This project has several strengths, specifically in allowing users to control exactly which portions of their code get compiled and what parameters are used during compilation. This flexibility is huge, as it lets users design their code however they like without worrying that the entire call stack involved in a tagged function will be affected by its compilation rules.
