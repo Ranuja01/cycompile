@@ -51,6 +51,22 @@ CACHE_DIR = package_dir / 'cycache'  # Set 'cycache' folder within the package d
 IS_WINDOWS = platform.system() == "Windows"
 
 def clear_cache():
+    
+    """
+    Clears all files and folders from the cycompile cache directory.
+
+    This function recursively deletes all contents of the cache directory used for
+    storing compiled Cython extensions. If some files cannot be deleted (e.g., due to being
+    in use), it logs a warning and lists the undeleted paths.
+
+    Logs:
+        - If the cache directory does not exist.
+        - Status updates during and after the clearing process.
+    
+    Returns:
+        None
+    """
+    
     path = Path(CACHE_DIR)
     if not path.exists():
         print(f"[cycompile-log] Cache directory does not exist: '{CACHE_DIR}'")
@@ -78,13 +94,13 @@ def clear_cache():
 
 def generate_cython_source(func):
     """
-    Generates the Cython source code for the given function.
+    Generate Cython source code for the given Python function.
 
     Parameters:
-    - func: The function to generate Cython code for.
+        func (function): The function to generate Cython code for.
     
     Returns:
-    - A string containing the Cython source code.
+        str: Cython-compatible source including imports.
     """
     
     # Extract necessary imports and the function's source code.
@@ -100,15 +116,17 @@ def generate_cython_source(func):
 def extract_all_imports(func, exclude=("cythonize_decorator", "cycompile")):
     
     """
-    Extracts all import statements and the functions being used within the provided function.
-    It also adds the necessary imports for functions defined in the same module that are being called.
+    Extract all import statements used within the given function.
+    
+    It also adds the imports for functions and classes defined in the same module 
+    that are called by the target function..
 
     Parameters:
-    - func: A reference to the function being decorated.
-    - exclude: A tuple holding imports to be exluded from the cython file.
-    
+        func (function): The function being analyzed.
+        exclude (tuple): Names to exclude from the generated import statements.
+
     Returns:
-    - string representing the import statements needed for the final file.
+        str: Import statements required for the generated Cython file.
     """
     
     # Get the current module where the function is defined.
@@ -153,13 +171,13 @@ def extract_all_imports(func, exclude=("cythonize_decorator", "cycompile")):
 def get_class_names(module):
   
     """
-    Get a list of class names defined in the same module.
+    Get all class names defined in the given module.
 
     Parameters:
-    - module: A reference to the module where the decorated function is from.    
-    
+        module (module): The module containing the decorated function.
+
     Returns:
-    - list of class names.
+        list: Class names defined in the same module.
     """
     
     return [name for name, obj in inspect.getmembers(module, inspect.isclass)
@@ -167,14 +185,15 @@ def get_class_names(module):
 
 
 def get_function_names(module):
+    
     """
-    Get a list of function names defined in the same module.
+    Get all function names defined in the given module.
 
     Parameters:
-    - module: A reference to the module where the decorated function is from.
+        module (module): The module containing the decorated function.
     
     Returns:
-    - list of function names.
+        list: Function names defined in the same module.
     """
     
     return [name for name, obj in inspect.getmembers(module, inspect.isfunction)]
@@ -183,16 +202,16 @@ def get_function_names(module):
 def get_called_functions(func_source, available_functions):    
     
     """
-    Extracts the names of functions and methods that are called inside the source code
+    Extracts the names of functions and classes that are called within the source code
     of a given function. Uses the Abstract Syntax Tree (AST) to parse the code and safely
-    detect function calls, ignoring other uses of function names.
+    detect function calls, distinguishing them from other uses of function and class names.
 
     Parameters:
-    - func_source: The source code of the function being analyzed.
-    - available_functions: A list of function and class names in the module to check against.
+        func_source (str): The source code of the function being analyzed.
+        available_functions (list): A list of function and class names to check against.
 
     Returns:
-    - A list of names of functions and methods that are called within the function.
+        list: A list of names of user-defined functions and classes called within the provided function.
     """
     
     # Parse the source code into an Abstract Syntax Tree (AST).
@@ -200,19 +219,22 @@ def get_called_functions(func_source, available_functions):
     
     called = set()
 
-    # Traverse the AST to find function calls.
+    # Traverse the AST to find all function call nodes.
     for node in ast.walk(tree):
-        # Check if the node is a function call.
+        # Check if the node represents a function call.
         if isinstance(node, ast.Call):
             # If the function is directly called, e.g., func().
             if isinstance(node.func, ast.Name):
                 called.add(node.func.id)
             # If the function is an attribute of an object, e.g., obj.func().
             elif isinstance(node.func, ast.Attribute):
-                if isinstance(node.func.value, ast.Name):  # Ensure it's part of a class or object.
+                # Ensure that the function is part of an object or class, e.g., obj.func().
+                if isinstance(node.func.value, ast.Name):
                     called.add(node.func.attr)
-    
-    # Filter out any functions not in the available functions list.
+
+    # **Filter step**: Remove any functions that aren't part of the available functions in the module.
+    # This includes removing functions that are built-ins, or any that are not defined within the module
+    # (i.e., functions that are not listed in `available_functions`).
     called = [name for name in called if name in available_functions]
     
     return called
@@ -221,15 +243,14 @@ def get_called_functions(func_source, available_functions):
 def remove_decorators(func):
 
     """
-    Removes all decorators except @staticmethod, @classmethod, and @property.
+    Removes all decorators from a function except @staticmethod, @classmethod, and @property.
     Also strips multi-line decorators (e.g., @cycompile(...)).
 
-
     Parameters:
-    - func: A reference to the function being decorated.
+        func (function): The function being analyzed.
 
     Returns:
-    - The function source code with unwanted decorators stripped.
+        str: The function source code with unwanted decorators stripped.
     """
     
     # Acquire the source code and split it into individual lines.
@@ -271,16 +292,19 @@ def run_cython_compile(pyx_path, output_dir, verbose, opt="safe",
                        extra_compile_args=None, compiler_directives=None):
     
     """
-    Compiles the given Cython code using a selected optimization profile.
+    Compiles a Cython file using the specified optimization profile.
     Supports custom compiler directives and flags, including profile overrides.
 
     Parameters:
-    - pyx_path: Path to the Cython (.pyx) file to compile.
-    - output_dir: Directory where the compiled file should be saved.
-    - verbose: Whether to enable verbose output during compilation.
-    - opt: Optimization profile to use ("safe", "fast", or "custom").
-    - extra_compile_args: Optional list of compiler flags (used for "custom" or to override profiles).
-    - compiler_directives: Optional dictionary of Cython compiler directives (used for "custom" or to override profiles).
+        pyx_path (str): Path to the Cython (.pyx) file to compile.
+        output_dir (str): Directory where the compiled file should be saved.
+        verbose (bool): Whether to enable verbose output during compilation.
+        opt (str): Optimization profile to use ("safe", "fast", or "custom").
+        extra_compile_args (list, optional): Additional compiler flags (used for "custom" or to override profiles).
+        compiler_directives (dict, optional): Cython compiler directives (used for "custom" or to override profiles).
+
+    Returns:
+        None
     """
     
     # Ensure output directory exists.
@@ -367,13 +391,13 @@ def cycompile(opt="safe", extra_compile_args=None, compiler_directives=None, ver
     A decorator factory for compiling Python functions into optimized Cython extensions at runtime.
     
     Parameters:
-    - opt: Optimization profile ('safe', 'fast', or 'custom').
-    - extra_compile_args: Custom compiler flags (optional).
-    - compiler_directives: Cython compiler directives (optional).
-    - verbose: If True, prints detailed logs of the compilation process.
+        opt (str): Optimization profile to use ("safe", "fast", or "custom").
+        extra_compile_args (list, optional): Additional compiler flags (used for "custom" or to override profiles).
+        compiler_directives (dict, optional): Cython compiler directives (used for "custom" or to override profiles).
+        verbose (bool): Whether to enable verbose output during tool usage.
 
     Returns:
-    - A decorator that compiles the wrapped function with the specified options.
+        function: A decorator that compiles the wrapped function with the specified options.
     """
     
     # Create the directory if it doesn't exist.
@@ -386,14 +410,14 @@ def cycompile(opt="safe", extra_compile_args=None, compiler_directives=None, ver
     def decorator(func):
         
         """
-        Inner decorator that wraps the target function.
+        The actual decorator that wraps and compiles the target function.
         
         Parameters:
-        - func: A reference to the Python function to be compiled.
+            func (function): The Python function to be compiled.
         
         Returns:
-        - A callable that wraps the original function. On first call, it compiles the function using Cython and caches the result.
-          Subsequent calls are dispatched directly to the compiled version for improved performance.
+            callable: A wrapper that compiles the function on first call and caches it.
+                      Subsequent calls use the compiled version for better performance
         """
         
         @wraps(func)
@@ -403,11 +427,11 @@ def cycompile(opt="safe", extra_compile_args=None, compiler_directives=None, ver
             Wrapper function that calls the Cython-compiled version of the function after it has been compiled.
         
             Parameters:
-            - *args: Positional arguments to pass to the Cython-compiled function.
-            - **kwargs: Keyword arguments to pass to the Cython-compiled function.
+                *args (tuple): Positional arguments to pass to the Cython-compiled function.
+                **kwargs (dict): Keyword arguments to pass to the Cython-compiled function.
         
             Returns:
-            - The result of calling the Cython-compiled version of the function.
+                Any: The result of calling the compiled version of the function.
             """
             
             nonlocal compiled_func
