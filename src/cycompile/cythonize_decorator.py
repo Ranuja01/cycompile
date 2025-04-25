@@ -306,7 +306,7 @@ def run_cython_compile(pyx_path, output_dir, verbose, opt="safe",
                 'nonecheck': False,    # Skip None-checking.
             },
             "flags": (
-                ["/O2"] if IS_WINDOWS else  # Optimize for speed (MSVC).
+                ["/O2", "/fp:fast", "/GL", "/arch:AVX2"] if IS_WINDOWS else  # Optimize for speed (MSVC).
                 ["-Ofast", "-march=native", "-flto", "-funroll-loops", "-ffast-math"]  # Aggressive GCC/Clang optimizations.
             ),
         }

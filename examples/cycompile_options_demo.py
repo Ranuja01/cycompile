@@ -6,8 +6,6 @@
 
 from cycompile import cycompile
 import time
-import numpy as np
-import cython
 
 # Helper function to time code execution
 def time_function(func, *args):

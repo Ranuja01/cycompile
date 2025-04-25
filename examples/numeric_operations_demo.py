@@ -26,8 +26,8 @@ def run_and_report(name, func, *args, **kwargs):
 # -----------------------------
 arr = np.random.rand(1_000_000)
 arr_small = np.random.rand(1_000)
-A = np.random.rand(500, 500)
-B = np.random.rand(500, 500)
+A = np.random.rand(5000, 5000)
+B = np.random.rand(5000, 5000)
 
 # -----------------------------
 # Element-wise square
