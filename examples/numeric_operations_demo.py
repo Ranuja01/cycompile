@@ -34,16 +34,20 @@ B = np.random.rand(5000, 5000)
 # -----------------------------
 print("\n--- Element-wise Square ---")
 
+def elementwise_square(arr):
+    return np.array([x**2 for x in arr])
+
 @cython.compile
 def elementwise_square_cython(arr):
     return np.array([x**2 for x in arr])
 
 @cycompile(opt="fast")
-def elementwise_square_optimized(arr: np.ndarray) -> np.ndarray:
+def elementwise_square_optimized(arr):
     return np.array([x**2 for x in arr])
 
 run_and_report("elementwise_square_cython", elementwise_square_cython, arr)
-run_and_report("elementwise_square_optimized (with @cycompile)", elementwise_square_optimized, arr)
+run_and_report("elementwise_square_cycompile", elementwise_square_optimized, arr)
+run_and_report("elementwise_square_python", elementwise_square, arr)
 
 # -----------------------------
 # Matrix multiplication
@@ -62,8 +66,8 @@ def matrix_multiplication_optimized(A, B):
     return np.dot(A, B)
 
 run_and_report("matrix_multiplication_cython", matrix_multiplication_cython, A, B)
-run_and_report("matrix_multiplication_optimized (with @cycompile)", matrix_multiplication_optimized, A, B)
-run_and_report("matrix_multiplication (pure Python)", matrix_multiplication, A, B)
+run_and_report("matrix_multiplication_cycompile", matrix_multiplication_optimized, A, B)
+run_and_report("matrix_multiplication_python", matrix_multiplication, A, B)
 
 # -----------------------------
 # Sum elements
@@ -91,8 +95,8 @@ def sum_elements_optimized(arr):
     return total
 
 run_and_report("sum_elements_cython", sum_elements_cython, arr)
-run_and_report("sum_elements_optimized (with @cycompile)", sum_elements_optimized, arr)
-run_and_report("sum_elements (pure Python)", sum_elements, arr)
+run_and_report("sum_elements_cycompile", sum_elements_optimized, arr)
+run_and_report("sum_elements_python", sum_elements, arr)
 
 # -----------------------------
 # Bubble sort
@@ -126,8 +130,8 @@ def bubble_sort_optimized(arr):
     return arr
 
 run_and_report("bubble_sort_cython", bubble_sort_cython, arr_small.copy())
-run_and_report("bubble_sort_optimized (with @cycompile)", bubble_sort_optimized, arr_small.copy())
-run_and_report("bubble_sort (pure Python)", bubble_sort, arr_small.copy())
+run_and_report("bubble_sort_cycompile", bubble_sort_optimized, arr_small.copy())
+run_and_report("bubble_sort_python", bubble_sort, arr_small.copy())
 
 # -----------------------------
 # Euler method for ODE
@@ -169,5 +173,5 @@ t_end = 10
 dt = 0.1
 
 run_and_report("euler_method_cython", euler_method_cython, f, y0, t0, t_end, dt)
-run_and_report("euler_method_optimized (with @cycompile)", euler_method_optimized, f, y0, t0, t_end, dt)
-run_and_report("euler_method (pure Python)", euler_method, f, y0, t0, t_end, dt)
+run_and_report("euler_method_cycompile", euler_method_optimized, f, y0, t0, t_end, dt)
+run_and_report("euler_method_python", euler_method, f, y0, t0, t_end, dt)
