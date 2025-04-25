@@ -14,13 +14,13 @@ At its core, this project is about **lowering the barrier** between Python's ele
 
 Where it stands out:
 
-- **Handles recursive functions** &mdash; a common limitation in traditional function-level compilation tools.
+- **Non-invasive design** &mdash; requires no changes to your existing project structure or imports, just add a decorator.
+- **Understands standard Python type hints** &mdash; avoiding the need for Cython-specific rewrites.
+- **Handles recursive functions** &mdash; overcomming a common limitation in traditional function-level compilation tools.
 - **Supports user-defined objects** and custom logic more gracefully than many static compilers.
 - **Offers fine-grained control** over Cython directives and compiler flags for advanced users.
-- **Manages and clears its own binary cache** &mdash; giving developers transparency and control.
-- **Understands standard Python type hints** &mdash; avoiding the need for Cython-specific rewrites.
-- **Non-invasive design** &mdash; requires no changes to your existing project structure or imports, just add a decorator.
-- **Intelligent caching based on source** &mdash; minimizes unnecessary recompilation, with manual cache clearing available to avoid stale binaries.
+- **Intelligent source-based caching** &mdash; automatically avoids unnecessary recompilation by detecting source changes.
+- **Includes a manual cache cleanup option** &mdash; giving developers control over the binary cache when desired.
 
 **Note:** Throughout this README, you'll see `CyCompile` used as the name of the project, reflecting the branding and overall mission of the tool. When referring to the actual Python package or the module itself, I use cycompile in lowercase, which is the official package name on PyPI.
 
