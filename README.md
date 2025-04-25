@@ -218,7 +218,7 @@ def sum_of_squares_custom(n: int) -> float:
 ```
 **Important**: When using the custom option, language_level is not automatically set. If omitted, Cython will default to Python 2 syntax and semantics. To ensure compatibility with modern Python code, it's highly recommended to explicitly include 'language_level': 3 in your custom directives as seen in the example above.
 
-### Using recursive functions ### 
+### Using Recursive Functions ### 
 Many decorators, such as cython.compile(), struggle with recursive functions. Fortunately, cycompile excels at this, making it ideal for optimizing recursive logic. The following example demonstrates how you can use cycompile with a simple recursive function:
 ```python
 from cycompile import cycompile
