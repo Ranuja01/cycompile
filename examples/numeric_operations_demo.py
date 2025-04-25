@@ -169,7 +169,7 @@ def euler_method_optimized(f, y0, t0, t_end, dt):
 
 y0 = 1
 t0 = 0
-t_end = 10
+t_end = 100000
 dt = 0.1
 
 run_and_report("euler_method_cython", euler_method_cython, f, y0, t0, t_end, dt)

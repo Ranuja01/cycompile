@@ -35,3 +35,426 @@ You can paste this into:
 - Notebooks
 
 Let me know if you want a more visual/HTML-style version too.
+
+---
+
+---
+
+CyCompile: Practical Use Cases for Function-Level Optimization
+Basic Usage
+Python is an incredibly versatile and user-friendly language, but when it comes to performance, it can sometimes fall short, especially for compute-heavy tasks. Many Python developers face a common dilemma: how can they unlock C-level performance without leaving behind the simplicity and readability of Python code?
+Enter CyCompile: a Python package designed to bring the power of C-level performance to individual functions with just a simple decorator. Whether you're working on data processing, machine learning, or scientific computing, CyCompile makes it easy to optimize key sections of your code with minimal friction.
+If you're interested in the full details of how CyCompile works, its installation steps, and the key features, I encourage you to check out the README and the CyCompile GitHub for a more in-depth introduction.
+In this article, we'll focus on practical examples to demonstrate how to integrate CyCompile into your code. You'll see exactly how you can achieve significant speed improvements by adding a simple decorator to your Python functions; meaning no deep knowledge of C or Cython required.
+Note: Before we dive in, here are a couple of things to keep in mind:
+Throughout this article, you'll see CyCompile used as the name of the project, reflecting the branding and overall mission of the tool. When referring to the actual Python package or the module itself, we use cycompile in lowercase, which is the official package name on PyPI.
+The examples in this article are partitioned to better explain specific sections. As a result, simply copying certain snippets may not work as intended, since they are taken out of context. To view all the examples mentioned in this article, check out the examples directory in the repository.
+
+And with that, let's dive in!
+
+---
+
+Basic Usage
+The first example is the most basic usage of the decorator. The following examples are taken from simple_demo.py:
+from cycompile import cycompile, clear_cache
+
+@cycompile()
+def simple_function():    
+    print("[cycompile] This is a simple function.")
+    
+simple_function()
+This example is as simple as it gets. Tag a standalone function, and watch it get compiled into a high speed binary! 
+Keep in mind: the first time a function is run, it's compiled. This takes a few extra seconds and may actually be slower on short-lived scripts. But after the first run, the compiled binary is reused, giving you persistent speed boosts on subsequent calls.
+The binaries are stored in a cache within the package directory. If you modify the source of the tagged function, cycompile detects it and recompiles automatically. This is possible because the cache uses a source-based hashing system, ensuring:
+No binary collisions
+No outdated or mismatched binaries reused
+
+Cache Management
+Wondering how to clear the cache? It's built in! The following function call can be used to delete the cache in its entirety:
+clear_cache()
+Note: On Windows, session-based environments like Jupyter may sometimes prevent binaries from being deleted immediately (due to open file handles). If that happens, clear_cache() will handle the error gracefully and list any files it couldn't remove. You can resolve this by restarting your session, which will release the held files.
+Using User-Defined and Imported Functions
+Let's move on to a more common use case showcased in this section's example file. The following example is taken from function_call_demo.py:
+from cycompile import cycompile
+import numpy as np
+
+# Helper function used by the compiled function
+@cycompile()
+def cube(n):
+    return n ** 3
+
+# Main function using the helper, compiled with cycompile
+@cycompile(verbose=True)
+def sum_of_cubes(n):
+    result = 0.0
+    for i in range(1, n + 1):
+        result += cube(i)
+    return np.array(result)
+
+# Demonstration
+print(sum_of_cubes(10**4))  
+This example demonstrates several key features of CyCompile:
+Support for user-defined and imported functions: You can freely use helpers like cube() or libraries like NumPy inside a compiled function.
+Optional verbosity for debugging: The verbose=True argument prints helpful output during compilation, including C compiler messages and cycompile's internal progress. While useful for insight or debugging, be aware it can get noisy for large functions or frequent recompilations. By default, this is turned off.
+Selective compilation control: Both cube() and sum_of_cubes() are tagged here, but they don't have to be. You could remove the decorator from either one, and the program would still run. Only tagged functions are compiled into C binaries.
+
+This level of granular control is one of CyCompile's biggest strengths. Many similar tools attempt to compile all user-defined functions involved in a tagged function's call stack. This can lead to unwanted behavior, especially if:
+You don't want every helper function optimized
+Some of them aren't compatible with Cython
+
+With CyCompile, only what you explicitly tag gets compiled. Everything else runs as normal Python, allowing for flexibility and easier debugging.
+Fine-Grained Performance Control
+Now let's look at the different options for customizing your cycompile experience. The following examples are taken from cycompile_options_demo.py: 
+from cycompile import cycompile
+
+# Function decorated with cycompile (safe optimization)
+@cycompile()
+def sum_of_squares_safe(n: int) -> float:
+    result = 0.0
+    for i in range(1, n+1):
+        result += i**2
+    return result
+
+# Function decorated with cycompile (fast optimization)
+@cycompile(opt="fast")
+def sum_of_squares_fast(n: int) -> float:
+    result = 0.0
+    for i in range(1, n+1):
+        result += i**2
+    return result
+Safe Mode
+In the above code segment, you can see the usage of two modes "safe" and "fast". The first function sum_of_squares_safe()does not need to explicitly set opt = "safe" in the cycompile decorator call; the default option is "safe". The safe option adds no additional compiler flags or Cython directives when compiling the code. This mode compiles without adding any special Cython directives or compiler flags, ensuring full compatibility and precision.
+Fast Mode
+The "fast" option, demonstrated in sum_of_squares_fast(), applies a set of Cython directives and compiler flags designed for aggressive optimization:
+Cython Directives:
+language_level = 3
+ Ensures compatibility with Python 3 syntax and semantics during compilation.
+boundscheck = False
+ Disables bounds checking on arrays and lists, which improves speed but can risk out-of-bounds errors if you're not careful.
+wraparound = False
+ Disables support for negative indexing (e.g., arr[-1]) - this reduces overhead in loops.
+cdivision = True
+ Enables C-style division, which is faster than Python's safe division behavior but may behave differently with negative numbers.
+nonecheck = False
+ Skips runtime checks for None values when accessing object attributes, improving speed.
+
+Compiler flags
+On Windows:
+/O2 – General speed optimization using MSVC; enables a wide range of optimizations including loop unrolling and inline expansion.
+/fp:fast – Enables aggressive floating-point optimizations.
+/GL – Enables whole program optimization; requires /LTCG at link time.
+/arch:AVX2 – Uses AVX2 instruction set for modern CPUs.
+
+On Linux/macOS:
+-Ofast – Applies all -O3 optimizations plus more aggressive transformations that may break strict standards compliance.
+-march=native – Optimizes the code for the specific CPU running the compiler.
+-flto – Enables link-time optimization (LTO) for whole-program performance improvements.
+-funroll-loops – Unrolls loops where beneficial for speed.
+-ffast-math – Enables aggressive, non-IEEE-compliant math optimizations.
+
+These optimizations push for maximum performance, leveraging CPU-specific instruction sets and loop-level enhancements.
+Note: The "fast" optimization option may not always provide the best results. It applies the most aggressive optimizations, but depending on the use case, this can lead to excessive overhead or be inappropriate for certain functions. Additionally, aggressive optimization may result in a loss of accuracy for applications requiring precision. If you need more control , or want to avoid specific optimizations , check out the next section on the "custom" option, where you can define your own parameters.
+Custom Mode
+This option allows the user to set the exact Cython directives and compiler flags that they want, depending on their application:
+# Function decorated with cycompile (custom settings)
+@cycompile(
+    opt="custom",
+    compiler_directives={
+        'language_level': 3,
+        'boundscheck': False,
+        'wraparound': False,
+    },
+    extra_compile_args=["-O3", "-mtune=native"]
+)
+def sum_of_squares_custom(n: int) -> float:
+    result = 0.0
+    for i in range(1, n+1):
+        result += i**2
+    return result
+This approach allows you to fine-tune your optimization strategy, whether you're aiming to squeeze out every bit of performance, maintain strict safety, or strike a balance between the two.
+You can find a full list of available options here:
+Cython Compiler Directives
+GCC Compiler Flags
+MSVC Compiler Options
+
+Use this mode when you want full transparency and control over how your functions are compiled, perfect for advanced users or specialized workflows.
+Note: When using the custom option, language_level is not enforced automatically. If you do not specify it, Cython will default to Python 2 behavior. For most modern use cases, it is strongly recommended to set 'language_level': 3 explicitly to ensure Python 3 compatibility during compilation.
+Overriding
+The tool also supports profile overriding. For example, if you wish to use the "fast" profile with some changes, you may specify that with an override. The rest of the parameters will remain as predefined:
+# Function decorated with cycompile (overridden both flags and directives)
+@cycompile(
+    opt="fast",
+    compiler_directives={'nonecheck': True, 'boundscheck': True},
+    extra_compile_args=["-fno-fast-math", "-funroll-loops"]
+)
+def sum_of_squares_override_both(n: int) -> float:
+    result = 0.0
+    for i in range(1, n+1):
+        result += i**2
+    return result
+Note on recompilation:
+Any change to the compilation settings, such as modifying the opt mode, updating compiler_directives, or altering extra_compile_argswill trigger a recompilation of the function. Just like changes to the function body, these adjustments result in a different hash, which ensures that a new binary is built and cached accordingly.
+Using Recursive Functions
+Now let's look at the different options for customizing your cycompile experience. The following examples are taken from fibonacci_benchmark.py and mutual_recursion.py:
+Before we dive into recursion, it's worth highlighting a subtle but important difference between cycompile and cython.compile: Python-style static typing. In the example below, the function fib_loop() uses standard Python type hints, which work seamlessly with cycompile, but cause an error when used with cython.compile.
+@cycompile(opt="fast")
+def fib_loop(n: int) -> int:
+    a, b = 0, 1
+    for _ in range(n):
+        a, b = b, a + b
+    return a
+
+# Attempt cython.compile for loop fibonacci with Python-style type hints (fails)
+@cython.compile
+def fib_loop_cython_typed(n: int) -> int:
+    a, b = 0, 1
+    for _ in range(n):
+        a, b = b, a + b
+    return a
+
+# Loop fibonacci with cython.compile (succesful)
+@cython.compile
+def fib_loop_cython_untyped(n):
+    a, b = 0, 1
+    for _ in range(n):
+        a, b = b, a + b
+    return a
+In this case, fib_loop() compiles and runs correctly under cycompile, while fib_loop_cython_typed() fails with cython.compile. Just another example of how cycompile works more naturally with Python-native syntax. 
+Let's now look at recursive functions, specifically the classic recursive Fibonacci algorithm.
+@cycompile(opt="fast")
+def fib_recursive(n: int) -> int:
+    if n <= 1:
+        return n
+    return fib_recursive(n - 1) + fib_recursive(n - 2)
+
+# Recursive function with cython.compile (fails)
+@cython.compile
+def fib_recursive_cython(n):
+    if n <= 1:
+        return n
+    return fib_recursive_cython(n - 1) + fib_recursive_cython(n - 2)
+As noted in the comments, cython.compile does not support recursion out of the box and will raise an error for fib_recursive_cython. cycompile, on the other hand, handles recursion natively and without issue, showcasing a key advantage when working with algorithms that rely on self-reference.
+Similarly, cycompile can handle mutual recursion, where two or more functions call each other. The following code from mutual_recursion.py demonstrates this:
+from cycompile import cycompile
+
+# Determines if a number is even using mutual recursion
+@cycompile(opt="fast", verbose=True)
+def is_even(n):
+    if n == 0:
+        return True
+    else:
+        return is_odd(n - 1)
+
+# Determines if a number is odd using mutual recursion
+@cycompile(opt="fast", verbose=True)
+def is_odd(n):
+    if n == 0:
+        return False
+    else:
+        return is_even(n - 1)
+
+# --- Example usage ---
+number = 5
+print(f"Is {number} even? {is_even(number)}")
+print(f"Is {number} odd? {is_odd(number)}")
+Again, much like in the example earlier with the helper function, you don't need to decorate both functions for this to work. cycompile will optimize only what's tagged, and the rest will remain as regular Python, fully interoperable.
+Using Classes and Objects
+While Python may not be the most object-oriented language compared to others like Java or C++, it still provides full support for object-oriented programming (OOP). In this section, we'll explore how cycompile handles OOP constructs and compare its behavior to Cython's cython.compile. The following examples are taken from method_and_class_examples.py:
+@cython.compile
+def simple_function_cython():    
+    print("[cython] This is a simple function.")
+
+@cython.compile
+def object_integration_function_cython(obj):
+    obj.instance_method_2()
+    print("[cython] Called method from passed object.")
+
+@cython.compile
+def object_creation_function_cython():
+    obj = MyClassCython()
+    obj.instance_method_2()
+    print("[cython] Create object and call a method from it.")
+
+class MyClassCython:
+    @classmethod
+    @cython.compile
+    def class_method(cls):
+        print("[cython] This is a class method.")
+
+    @cython.compile
+    def instance_method(self):
+        print("[cython] This is an instance method.")
+        
+    def instance_method_2(self):
+        print("[regular] This is an instance method too.")
+
+@cython.compile
+def outer_function_cython():    
+    def inner_function():
+        print("[cython] This is a nested function.")
+    inner_function()
+Let's first look at the existing tool cython.compile. It fails in calling object_integration_function_cython() suggesting that it is unable to support the passing of user defined objects. Similarly, it fails in calling the tagged instance_method() using a newly created object. This behaviour makes sense as the instance method is tied to the class, where an inherent reference to "self" is passed when calling it. Maintaining that dependency while compiling to C is not a simple task. For cython.compile, every other function here operates successfully, including class_method()and outer_function_cython().
+Moving onto the same functions but for cycompile:
+@cycompile()
+def simple_function():    
+    print("[cycompile] This is a simple function.")
+
+@cycompile()
+def object_integration_function(obj):
+    obj.instance_method_2()
+    print("[cycompile] Called method from passed object.")
+
+@cycompile()
+def object_creation_function():
+    obj = MyClass()
+    obj.instance_method_2()
+    print("[cycompile] Create object and call a method from it.")
+
+class MyClass:
+    @classmethod
+    @cycompile()
+    def class_method(cls):
+        print("[cycompile] This is a class method.")
+
+    @cycompile()
+    def instance_method(self):
+        print("[cycompile] This is an instance method.")
+        
+    def instance_method_2(self):
+        print("[regular] This is an instance method too.")
+
+@cycompile()
+def outer_function():    
+    def inner_function():
+        print("[cycompile] This is a nested function.")
+    inner_function()
+cycompile fails in calling bothclass_method() and instance_method(). This is because cycompile has yet to provide support for classes. Interestingly, tests have shown that applying the decorator to the class itself can enable the use of instance methods. However, this behavior is not officially supported and should be considered unsafe or experimental.
+Every other function here operates successfully, including object_integration_function() which failed with the cython.compile decorator.
+Comparing Numeric Operations
+As a final benchmark for this project, I created a comparison file to evaluate cython.compile, cycompile, and pure Python for common numeric operations. In all cases, the "fast" profile is used for cycompile. The following examples are taken from numeric_operations_demo.py:
+Elementwise Square Operation
+print("\n--- Element-wise Square ---")
+
+def elementwise_square(arr):
+    return np.array([x**2 for x in arr])
+
+@cython.compile
+def elementwise_square_cython(arr):
+    return np.array([x**2 for x in arr])
+
+@cycompile(opt="fast")
+def elementwise_square_optimized(arr):
+    return np.array([x**2 for x in arr])
+In this example, a standard Python loop squares each element of the input array, and the result is wrapped into a NumPy array for vectorized operations. Performance results may vary slightly between runs, but generally speaking, cycompile consistently outperforms cython.compile for this pattern. And as expected, both decorated functions significantly outperform the pure Python version.
+Matrix Multiplication
+The next example compares performance for matrix multiplication:
+print("\n--- Matrix Multiplication ---")
+
+def matrix_multiplication(A, B):
+    return np.dot(A, B)
+
+@cython.compile
+def matrix_multiplication_cython(A, B):
+    return np.dot(A, B)
+
+@cycompile(opt="fast")
+def matrix_multiplication_optimized(A, B):
+    return np.dot(A, B)
+Here, all three implementations produce similar performance. In fact, the pure Python version sometimes runs slightly faster. This is because np.dot is already a highly optimized C-backed function, so additional compilation layers often introduce more overhead than benefit.
+Sum Array Elements
+The next code segment looks at summing array elements in a loop and returning them:
+print("\n--- Sum Elements ---")
+
+def sum_elements(arr):
+    total = 0.0
+    for x in arr:
+        total += x
+    return total
+
+@cython.compile
+def sum_elements_cython(arr):
+    total = 0.0
+    for x in arr:
+        total += x
+    return total
+
+@cycompile(opt="fast")
+def sum_elements_optimized(arr):
+    total = 0.0
+    for x in arr:
+        total += x
+    return total
+Performance results in this run are similar to the elementwise square operation. Both decorated functions perform better than pure Python, with cycompile taking the edge over cython.compile in most runs.
+Bubble Sort
+The next example compares the performance of the bubble sort algorithm across the three contenders:
+print("\n--- Sorting (Bubble Sort) ---")
+
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1]:
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+    return arr
+
+@cython.compile
+def bubble_sort_cython(arr):
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1]:
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+    return arr
+
+@cycompile(opt="fast")
+def bubble_sort_optimized(arr):
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1]:
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+Once again, both decorators out perform pure Python, but they are approximately equal to eachother. In practice, their performance is about equal, with either one occasionally pulling ahead.
+Euler Method
+In this final benchmark, we test the Euler Method, a numerical technique for solving ordinary differential equations (ODEs). It's a basic loop-based algorithm that repeatedly updates values based on a simple rule, often used in numerical simulations. It's a common pattern where small updates are applied over many steps, making it a good candidate for performance testing.
+def f(t, y):
+    return -y + t
+
+def euler_method(f, y0, t0, t_end, dt):
+    t = np.arange(t0, t_end, dt)
+    y = np.zeros(len(t))
+    y[0] = y0
+    for i in range(1, len(t)):
+        y[i] = y[i-1] + dt * f(t[i-1], y[i-1])
+    return y
+
+@cython.compile
+def euler_method_cython(f, y0, t0, t_end, dt):
+    t = np.arange(t0, t_end, dt)
+    y = np.zeros(len(t))
+    y[0] = y0
+    for i in range(1, len(t)):
+        y[i] = y[i-1] + dt * f(t[i-1], y[i-1])
+    return y
+
+@cycompile(opt="fast")
+def euler_method_optimized(f, y0, t0, t_end, dt):
+    t = np.arange(t0, t_end, dt)
+    y = np.zeros(len(t))
+    y[0] = y0
+    for i in range(1, len(t)):
+        y[i] = y[i-1] + dt * f(t[i-1], y[i-1])
+    return y
+
+y0 = 1
+t0 = 0
+t_end = 100000
+dt = 0.1
+Performance results in this run are similar to the elementwise square operation and the sum elements example. Both decorated functions perform better than pure Python, with cycompile taking the edge over cython.compile in most runs.
+Final Thoughts
+I hope this article has shed some light on the power of CyCompile. To truly experience what it can do, I implore you install the tool for yourselves and experiment with different configurations and codebases. You'll find installation instructions and an examples folder (with all the code used in this article) on the GitHub repository.
+Whether you're optimizing tight loops, speeding up recursive algorithms, or just experimenting with performance tuning, CyCompile offers a straightforward path to better speed with minimal fuss. And because it's decorator-based and fully configurable, you're not locked into a one-size-fits-all model. You can pick and choose exactly what gets accelerated.
+That said, this is still a growing project. Support for classes is in progress, and async functions may pose challenges down the line. There are also more complex or less typical Python features - like metaprogramming, dynamic code execution, or certain third-party libraries - that haven't been fully explored yet and may require special handling. But the foundation is solid, and the roadmap is clear: keep improving, stay flexible, and bring more performance to more Python developers.
+Throughout this article, I've compared CyCompile to a similar tool, showing how it not only outperforms it in certain benchmarks, but also handles tricky cases like recursion more gracefully. Where other solutions might falter or require extra effort, CyCompile often just works.
+This tool is built for everyone, hence the project slogan Democratizing Performance. I built it for anyone looking to create efficient, performance-driven systems in Python, and I truly hope it gains the traction it deserves. Whether you're building something simple or architecting complex systems, CyCompile is designed to meet you where you are.
+Thanks again for reading, and I hope CyCompile becomes a valuable part of your Python toolkit.
+Happy compiling!

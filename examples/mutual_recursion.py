@@ -14,7 +14,7 @@ def is_even(n):
         return is_odd(n - 1)
 
 # Determines if a number is odd using mutual recursion
-@cycompile(opt="safe", verbose=True)
+@cycompile(opt="fast", verbose=True)
 def is_odd(n):
     if n == 0:
         return False
