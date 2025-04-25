@@ -89,7 +89,7 @@ from cycompile import cycompile
 ```
 **Note:** The first execution of a tagged function compiles it into a C-based binary, meaning it will take longer than usual (a few seconds extra). After this, the speed improvements will be permanent as long as the cache is not emptied and the function or the compilation settings have not changed.
 
-You can now bring C/C++ level performance to any function with a single decorator. Below are a few examples demonstrating the `CyCompile` tool in action. If you're looking for a deeper dive with performance comparisons, advanced configurations, and design insights, check out the full walkthrough on Medium (add link).
+You can now bring C/C++ level performance to any function with a single decorator. Below are a few examples demonstrating the `CyCompile` tool in action. If you're looking for a deeper dive with performance comparisons, advanced configurations, and more complex use cases, check out the full walkthrough on Medium (add link).
 
 The following examples are excerpts from the examples folder (add link) in this repository, with full walkthroughs available in the accompanying Medium article (add link).
 
