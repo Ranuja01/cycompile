@@ -16,7 +16,7 @@ Where it stands out:
 
 - **Non-invasive design** &mdash; requires no changes to your existing project structure or imports, just add a decorator.
 - **Understands standard Python type hints** &mdash; avoiding the need for Cython-specific rewrites.
-- **Handles recursive functions** &mdash; overcomming a common limitation in traditional function-level compilation tools.
+- **Handles recursive functions** &mdash; overcoming a common limitation in traditional function-level compilation tools.
 - **Supports user-defined objects** and custom logic more gracefully than many static compilers.
 - **Offers fine-grained control** over Cython directives and compiler flags for advanced users.
 - **Intelligent source-based caching** &mdash; automatically avoids unnecessary recompilation by detecting source changes.
