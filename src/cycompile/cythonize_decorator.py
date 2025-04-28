@@ -163,9 +163,20 @@ def extract_all_imports(func, exclude=("cythonize_decorator", "cycompile")):
                     script_imports.append(line.rstrip())
 
     script_imports = "\n".join(script_imports)
-
-    # Combine the imports from the file and the imports for functions called within the function.
-    return f"{script_imports}\n{user_func_imports}"
+    
+    # Also get constants
+    constant_names = get_constant_names(current_module)
+    
+    # Find which constants are used in the function
+    used_constants = get_used_constants(func_source, constant_names)
+    
+    # Add imports for constants
+    user_constant_imports = "\n".join(
+        [f"from {current_module.__name__} import {name}" for name in used_constants]
+    )
+    
+    # Combine all imports
+    return f"{script_imports}\n{user_func_imports}\n{user_constant_imports}"
 
 
 def get_class_names(module):
@@ -211,7 +222,7 @@ def get_called_functions(func_source, available_functions):
         available_functions (list): A list of function and class names to check against.
 
     Returns:
-        list: A list of names of user-defined functions and classes called within the provided function.
+        list: Names of user-defined functions and classes called within the provided function.
     """
     
     # Parse the source code into an Abstract Syntax Tree (AST).
@@ -238,6 +249,46 @@ def get_called_functions(func_source, available_functions):
     called = [name for name in called if name in available_functions]
     
     return called
+
+def get_constant_names(module):
+    """
+    Get all constant names defined in the given module.
+    (Constants are considered variables with ALL_UPPERCASE names.)
+
+    Parameters:
+        module (module): The module containing the decorated function.
+        
+    Returns:
+        list: List of constant names.
+    """
+    return [
+        name for name, obj in inspect.getmembers(module)
+        if name.isupper() and not inspect.isroutine(obj) and not inspect.isclass(obj)
+    ]
+
+
+def get_used_constants(func_source, available_constants):
+    """
+    Extracts the names of constants used within the source code
+    of a given function.
+    
+    Parameters:
+        func_source (str): The source code of the function being analyzed.
+        available_constants (list): List of known module-level constants.
+        
+    Returns:
+        list: Names of constants used within the function.
+    """
+    tree = ast.parse(func_source)
+    used = set()
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name):
+            if isinstance(node.ctx, ast.Load):  # Only reading, not writing
+                used.add(node.id)
+
+    used_constants = [name for name in used if name in available_constants]
+    return used_constants
 
 
 def remove_decorators(func):
