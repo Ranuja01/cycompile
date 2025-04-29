@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, Dict, Final, List, Literal, Tuple, TypeVar
+from typing import Any, Callable, Dict, Final, Iterable, List, Literal, TypeVar
 
 from typing_extensions import ParamSpec, TypeAlias
 
@@ -19,7 +19,10 @@ IS_WINDOWS: Final[bool]
 def clear_cache() -> None: ...
 def generate_cython_sources(func: Callable[..., Any]) -> str: ...
 def extract_all_imports(
-    func: Callable[..., Any], exclude: Tuple[str, ...] = ('cythonize_decorator', 'cycompile')
+    func: Callable[..., Any],
+    # I don't think it's necessary to limit the type annotation strictly to a tuple,
+    # as in reality any iterable yielding strings would be appropriate.
+    exclude: Iterable[str] = ('cythonize_decorator', 'cycompile'),
 ) -> str: ...
 def get_class_names(module: ModuleType) -> List[str]: ...
 def get_function_names(module: ModuleType) -> List[str]: ...
