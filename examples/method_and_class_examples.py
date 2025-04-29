@@ -135,8 +135,8 @@ if __name__ == "__main__":
 
     try:
         print("\n→ object_integration_function_cython(obj)")
-        obj = MyClassCython()
-        object_integration_function_cython(obj)
+        c_obj = MyClassCython()
+        object_integration_function_cython(c_obj)
     except Exception as e:
         print(f"[ERROR] object_integration_function_cython: {e}")
 
@@ -154,8 +154,8 @@ if __name__ == "__main__":
 
     try:
         print("\n→ obj.instance_method()")
-        obj = MyClassCython()
-        obj.instance_method()
+        c_obj = MyClassCython()
+        c_obj.instance_method()
     except Exception as e:
         print(f"[ERROR] instance_method_cython: {e}")
 
