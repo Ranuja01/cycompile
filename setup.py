@@ -24,7 +24,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="cycompile",  # Package name
-    version="0.1.2",  # Version number
+    version="0.1.4",  # Version number
     author="Ranuja Pinnaduwage",
     author_email="Ranuja.Pinnaduwage@gmail.com",
     description="A Python package for optimizing function performance via a Cython decorator",  # Package description
