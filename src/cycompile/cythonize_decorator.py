@@ -93,6 +93,7 @@ def clear_cache():
         print("[cycompile-log] Cache cleared successfully.")
 
 def generate_cython_source(func):
+    
     """
     Generate Cython source code for the given Python function.
 
@@ -196,7 +197,7 @@ def get_function_names(module):
         list: Function names defined in the same module.
     """
     
-    return [name for name, obj in inspect.getmembers(module, inspect.isfunction)]
+    return [name for name, _ in inspect.getmembers(module, inspect.isfunction)]
 
 
 def get_called_functions(func_source, available_functions):    
