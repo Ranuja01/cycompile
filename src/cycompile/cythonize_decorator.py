@@ -398,6 +398,11 @@ def run_cython_compile(pyx_path, output_dir, verbose, opt="safe",
         directives = {**profile["directives"], **(compiler_directives or {})}
         flags = profile["flags"] + (extra_compile_args or [])
 
+    # Only suppress warnings if verbose is False
+    if not verbose:
+        if '/w' not in flags:
+            flags.append('/w')  # Suppress MSVC warnings in quiet mode
+
     # Add the cache directory to sys.path for the compilation process.
     sys.path.append(str(CACHE_DIR))  # Add cache path to sys.path
 
