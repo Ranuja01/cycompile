@@ -1,14 +1,12 @@
 from collections import OrderedDict
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, Dict, Final, Iterable, List, Literal, TypeVar
+from typing import Any, Callable, Dict, Final, Iterable, List, Literal, Optional, TypeVar
 
-from typing_extensions import ParamSpec, TypeAlias
+from typing_extensions import ParamSpec
 
 _T = TypeVar('_T')
 _P = ParamSpec('_P')
-
-OptimizationProfile: TypeAlias = Literal['safe', 'fast', 'custom']
 
 compiled_func_cache: OrderedDict[str, Callable[..., Any]]
 
@@ -34,13 +32,13 @@ def run_cython_compile(
     pyx_path: str,
     output_dir: str,
     verbose: bool,
-    opt: OptimizationProfile = 'safe',
-    extra_compile_args: List[str] | None = None,
-    compiler_directives: Dict[str, Any] | None = None,
+    opt: Literal['safe', 'fast', 'custom'] = 'safe',
+    extra_compile_args: Optional[List[str]] = None,
+    compiler_directives: Optional[Dict[str, Any]] = None,
 ) -> None: ...
 def cycompile(
-    opt: OptimizationProfile = 'safe',
-    extra_compile_args: List[str] | None = None,
-    compiler_directives: Dict[str, Any] | None = None,
+    opt: Literal['safe', 'fast', 'custom'] = 'safe',
+    extra_compile_args: Optional[List[str]] = None,
+    compiler_directives: Optional[Dict[str, Any]] = None,
     verbose: bool = False,
 ) -> Callable[[Callable[_P, _T]], Callable[_P, _T]]: ...
